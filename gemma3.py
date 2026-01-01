@@ -21,7 +21,7 @@ model = Gemma3ForConditionalGeneration.from_pretrained(
     model_id, device_map="auto", token=hf_token, cache_dir=custom_cache_dir
 ).eval()
 
-processor = AutoProcessor.from_pretrained(model_id, token=hf_token, ache_dir=custom_cache_dir, use_fast=True)
+processor = AutoProcessor.from_pretrained(model_id, token=hf_token, cache_dir=custom_cache_dir, use_fast=True)
 
 streamer = TextStreamer(processor.tokenizer, skip_prompt=True)
 
