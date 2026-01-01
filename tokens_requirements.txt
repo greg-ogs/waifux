@@ -1,0 +1,19 @@
+numpy==2.2.6
+pandas==2.3.3
+seaborn==0.13.2
+scikit-image==0.25.2
+scikit-learn==1.8.0
+opencv-python==4.12.0.88
+mysql-connector-python==9.5.0
+Pillow==11.3.0
+pyspark==4.1.0
+findspark==2.0.1
+# huggingface_hub
+huggingface_hub[hf_xet]>=0.34.0, <1.0
+datasets==4.4.2
+diffusers
+transformers
+accelerate
+torchvision
+torchaudio
+sentencepiece
