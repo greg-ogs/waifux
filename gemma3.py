@@ -1,7 +1,6 @@
 """
-
+Container for Gemma3
 """
-# pip install accelerate
 
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 from PIL import Image
@@ -9,11 +8,11 @@ import requests
 import torch
 import os
 
-model_id = "google/gemma-3-12b-it"
+model_id = "google/gemma-3-4b-it"
 
 hf_token = os.getenv("HF_TOKEN")
 
-custom_cache_dir = "./model_cache/Gemma3"
+custom_cache_dir = "model_files/Gemma3"
 
 if hf_token is None:
     raise ValueError("HF_TOKEN environment variable not found. Please set it before running.")
@@ -22,7 +21,7 @@ model = Gemma3ForConditionalGeneration.from_pretrained(
     model_id, device_map="auto", token=hf_token, cache_dir=custom_cache_dir
 ).eval()
 
-processor = AutoProcessor.from_pretrained(model_id, token=hf_token, ache_dir=custom_cache_dir)
+processor = AutoProcessor.from_pretrained(model_id, token=hf_token, ache_dir=custom_cache_dir, use_fast=True)
 
 messages = [
     {
