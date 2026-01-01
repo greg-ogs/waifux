@@ -2,7 +2,7 @@
 Container for Gemma3
 """
 
-from transformers import AutoProcessor, Gemma3ForConditionalGeneration
+from transformers import AutoProcessor, Gemma3ForConditionalGeneration, TextStreamer
 from PIL import Image
 import requests
 import torch
@@ -22,6 +22,8 @@ model = Gemma3ForConditionalGeneration.from_pretrained(
 ).eval()
 
 processor = AutoProcessor.from_pretrained(model_id, token=hf_token, ache_dir=custom_cache_dir, use_fast=True)
+
+streamer = TextStreamer(processor.tokenizer, skip_prompt=True)
 
 messages = [
     {
@@ -45,12 +47,8 @@ inputs = processor.apply_chat_template(
 input_len = inputs["input_ids"].shape[-1]
 
 with torch.inference_mode():
-    generation = model.generate(**inputs, max_new_tokens=100, do_sample=False)
+    generation = model.generate(**inputs, max_new_tokens=250, do_sample=True, streamer=streamer, temperature=0.3)
     generation = generation[0][input_len:]
 
-decoded = processor.decode(generation, skip_special_tokens=True)
-print(decoded)
-
-# **Overall Impression:** The image is a close-up shot of a vibrant garden scene,
-# focusing on a cluster of pink cosmos flowers and a busy bumblebee.
-# It has a slightly soft, natural feel, likely captured in daylight.
+# decoded = processor.decode(generation, skip_special_tokens=True)
+# print(decoded)
