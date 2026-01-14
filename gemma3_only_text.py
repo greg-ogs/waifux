@@ -19,7 +19,11 @@ def retrieve_from_file(file_path):
             return f.read()
 
 if __name__ == "__main__":
-    model_id = "google/gemma-3-1b-it"
+    import torch._dynamo
+
+    torch._dynamo.config.suppress_errors = True
+
+    model_id = "google/gemma-3-270m-it"
 
     hf_token = os.getenv("HF_TOKEN")
 
@@ -29,17 +33,26 @@ if __name__ == "__main__":
         raise ValueError("HF_TOKEN environment variable not found. Please set it before running.")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+    # dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+    dtype = torch.float32
 
     print(f"Using device: {device}")
 
     model = Gemma3ForCausalLM.from_pretrained(
-        model_id, token=hf_token, cache_dir=custom_cache_dir, dtype=dtype,  device_map=device
+        model_id, token=hf_token, cache_dir=custom_cache_dir, torch_dtype=dtype,  device_map=device
     ).eval()
+
+    model.config._attn_implementation = "eager"
+    # TORCH_DISABLE_DYNAMO=1
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
 
     streamer = TextStreamer(tokenizer, skip_prompt=True)
+
+    terminators = [
+        tokenizer.eos_token_id,
+        tokenizer.convert_tokens_to_ids("<end_of_turn>")
+    ]
 
     # Using small context
     # For larger files use Vector Database" (like ChromaDB or FAISS
@@ -54,12 +67,12 @@ if __name__ == "__main__":
         [
             {
                 "role": "system",
-                "content": [{"type": "text", "text": "You are a helpful assistant."},]
+                "content": [{"type": "text", "text": f"You are a helpful and cute waifu. Use the following information to answer the user:\n\n{retrieved_info}"}, ]
             },
             {
                 "role": "user",
-                "content": [{"type": "text", "text": f"Who was the last f1 champion? and why is considered the best F1 "
-                            f"driver in the world? Use the following information to answer the user:\n\n{retrieved_info}"},]
+                "content": [{"type": "text", "text": f"Hello, how are you? Can you tell me something about the F1?"
+                                                     f""}, ]
             },
         ],
     ]
@@ -74,7 +87,11 @@ if __name__ == "__main__":
 
     time_0 = time.time()
     with torch.inference_mode():
-        outputs = model.generate(**inputs, max_new_tokens=500, do_sample=True, streamer=streamer, temperature=0.3)
+        outputs = model.generate(**inputs, max_new_tokens=200, min_new_tokens=30, repetition_penalty=1.3, streamer=streamer,
+                                 use_cache=False,
+                                 eos_token_id=terminators,
+                                 do_sample=True, temperature=0.6, top_p=0.3,
+                                 )
 
     # outputs = tokenizer.batch_decode(outputs)
 

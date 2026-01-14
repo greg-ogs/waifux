@@ -32,12 +32,12 @@ if __name__ == "__main__":
         raise ValueError("HF_TOKEN environment variable not found. Please set it before running.")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+    dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
     print(f"Using device: {device}")
 
     model = Gemma3ForConditionalGeneration.from_pretrained(
-        model_id, token=hf_token, cache_dir=custom_cache_dir, dtype=dtype,  device_map=device
+        model_id, token=hf_token, cache_dir=custom_cache_dir, torch_dtype=dtype,  device_map=device
     ).eval()
 
     processor = AutoProcessor.from_pretrained(model_id, token=hf_token, cache_dir=custom_cache_dir, use_fast=True)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     inputs = processor.apply_chat_template(
         messages, add_generation_prompt=True, tokenize=True,
         return_dict=True, return_tensors="pt"
-    ).to(model.device, dtype=dtype)
+    ).to(model.device, torch_dtype=dtype)
 
     input_len = inputs["input_ids"].shape[-1]
 

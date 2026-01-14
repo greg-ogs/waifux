@@ -1,0 +1,20 @@
+numpy==1.26.4
+pandas==2.3.3
+seaborn==0.13.2
+scikit-image==0.25.2
+scikit-learn==1.7.2
+opencv-python==4.11.0.86
+mysql-connector-python==9.5.0
+Pillow==11.3.0
+pyspark==4.1.0
+findspark==2.0.1
+fsspec[http]==2025.10.0 #required for datasets
+huggingface_hub[hf_xet]>=0.34.0, <1.0 #Requied for transformers
+datasets==4.4.2
+# torchvision==0.20.0 requires specific build fo jetson
+# torchaudio==2.5.0 requires specific build for jetson
+diffusers
+accelerate
+sentencepiece
+pymupdf
+transformers==4.55.4 #  For compativility with the jetson pytorch whl
