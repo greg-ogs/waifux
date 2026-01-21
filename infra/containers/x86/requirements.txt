@@ -8,13 +8,14 @@ mysql-connector-python==9.5.0
 Pillow==11.3.0
 pyspark==4.1.0
 findspark==2.0.1
-# huggingface_hub
-huggingface_hub[hf_xet]>=0.34.0, <1.0
+fsspec[http]==2025.10.0 # required for datasets
+huggingface_hub[hf_xet]>=0.34.0, <1.0 # Requied for transformers
 datasets==4.4.2
-diffusers
-transformers
-accelerate
+torch==2.6.0
 torchvision
 torchaudio
+diffusers
+accelerate
 sentencepiece
 pymupdf
+transformers==4.55.4 # For compativility with the jetson pytorch whl
