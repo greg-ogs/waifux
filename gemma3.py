@@ -9,6 +9,10 @@ import torch
 import os
 import fitz
 
+# from TTS.api import TTS
+# import sounddevice as sd
+# import soundfile as sf
+
 def retrieve_from_file(file_path):
     if file_path.endswith('.pdf'):
         doc = fitz.open(file_path)
@@ -39,6 +43,8 @@ if __name__ == "__main__":
 
     print(f"Using device: {device}")
 
+    # tts = TTS("tts_models/en/jenny/jenny").to(device)
+
     model_kwargs = {}
 
     if "nv" in torch.__version__:
@@ -56,7 +62,7 @@ if __name__ == "__main__":
 
     processor = AutoProcessor.from_pretrained(model_id, token=hf_token, cache_dir=custom_cache_dir, use_fast=True)
 
-    streamer = TextStreamer(processor.tokenizer, skip_prompt=True)
+    streamer = TextStreamer(processor.tokenizer, skip_prompt=True, skip_special_tokens=True)
 
     # Using small context
     # For larger files use Vector Database" (like ChromaDB or FAISS
@@ -67,36 +73,60 @@ if __name__ == "__main__":
     except FileNotFoundError:
         retrieved_info = "No additional context found."
 
-    messages = [
-        [
-            {
-                "role": "system",
-                "content": [{"type": "text",
-                             "text": f"You are a helpful and cute waifu. Use the following information to answer the user:\n\n{retrieved_info}"}, ]
-            },
-            {
-                "role": "user",
-                "content": [{"type": "text", "text": f"Hello, how are you? Can you tell me something about the F1?"
-                                                     f""},
-                            {"type": "image", "image": os.path.join(os.path.dirname(__file__), "drivers.jpg")},]
-            },
-        ],
-    ]
+    messages = [{
+        "role": "system",
+        "content": [{"type": "text",
+                     "text": f"You are a helpful and cute waifu. Say hello"}, ]
+    }, {"role": "user", "content": [{"type": "text", "text": f"Hello, say hello to me"}]}]
 
-    inputs = processor.apply_chat_template(
-        messages, add_generation_prompt=True, tokenize=True,
-        return_dict=True, return_tensors="pt"
-    ).to(model.device)
+    # Add user input as a starting point
 
-    input_len = inputs["input_ids"].shape[-1]
+    # Use the following information to answer the user:\n\n{retrieved_info}
 
-    time_0 = time.time()
+    print("\n--- Gemma 3 Chat initialized (Type 'exit' to quit) ---")
+    count=0
+    while True:
+        try:
+            inputs = processor.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=True,
+                return_dict=True, return_tensors="pt"
+            ).to(model.device)
 
-    with torch.inference_mode():
-        generation = model.generate(**inputs, max_new_tokens=500, do_sample=True, streamer=streamer, temperature=0.3)
-        generation = generation[0][input_len:]
+            input_len = inputs["input_ids"].shape[-1]
 
-    # decoded = processor.decode(generation, skip_special_tokens=True)
-    # print(decoded)
-    time_1 = time.time()
-    print(f"Total inference time is:  {time_1 - time_0:.4f} seconds")
+            time_0 = time.time()
+
+            with torch.inference_mode():
+                generation = model.generate(**inputs, max_new_tokens=200, do_sample=True, streamer=streamer, temperature=0.3)
+                new_tokens = generation[0][input_len:]
+                decoded_response = processor.decode(new_tokens, skip_special_tokens=True)
+                decoded_response = decoded_response.replace("<end_of_turn>", "").strip()
+
+            time_1 = time.time()
+            # print(f"Total inference time is:  {time_1 - time_0:.4f} seconds")
+            messages.append({"role": "model", "content": [{"type": "text", "text": decoded_response}]})
+
+            if count==0:
+                messages.append({"role": "user", "content": [{"type": "text", "text": f"Please, tell me in the cutest "
+                                                                                      f"way tht the system is loading, something like 'stand by' or 'wait a minute please' "}]})
+                count = 1
+            else:
+                user_input = input("\nUser: ")
+                if user_input.lower() in ["exit", "quit"]:
+                    break
+                messages.append({"role": "user", "content": [{"type": "text", "text": user_input}]})
+
+            # if decoded_response:
+            #     audio_file = "response.wav"
+            #
+            #     tts.tts_to_file(text=decoded_response, file_path=audio_file)
+            #
+            #     data, samplerate = sf.read(audio_file)
+            #     sd.play(data, samplerate)
+            #     sd.wait()
+
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break
+        except Exception as e:
+            raise e
