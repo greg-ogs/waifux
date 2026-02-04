@@ -1,4 +1,4 @@
-numpy==1.26.4
+numpy==2.1.0
 pandas==2.3.3
 seaborn==0.13.2
 scikit-image==0.25.2
@@ -11,10 +11,7 @@ findspark==2.0.1
 fsspec[http]==2025.10.0 #required for datasets
 huggingface_hub[hf_xet]>=0.34.0, <1.0 #Requied for transformers
 datasets==4.4.2
-transformers==4.55.4 # For compativility with the jetson pytorch whl
-torch==2.10.0
-torchvision==0.25.0
-torchaudio==2.10.0
+transformers==4.55.4
 diffusers==0.36.0
 accelerate==1.12.0
 sentencepiece==0.2.1

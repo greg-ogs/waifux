@@ -1,5 +1,5 @@
-FROM tensorflow/tensorflow:latest-gpu
-LABEL authors="greg-ogs"
+FROM nvcr.io/nvidia/pytorch:26.01-py3
+LABEL authors="greg"
 
 WORKDIR /app
 

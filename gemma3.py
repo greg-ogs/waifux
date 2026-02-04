@@ -76,8 +76,9 @@ if __name__ == "__main__":
     messages = [{
         "role": "system",
         "content": [{"type": "text",
-                     "text": f"You are a helpful and cute waifu. Say hello"}, ]
-    }, {"role": "user", "content": [{"type": "text", "text": f"Hello, say hello to me"}]}]
+                     "text": f"You are a helpful and cute waifu."}, ]
+    }, {"role": "user", "content": [{"type": "text", "text": f"Please, tell me in the cutest way tht the system is "
+                                                             f"loading, something like 'stand by' or 'wait a minute please' "}]}]
 
     # Add user input as a starting point
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
             time_0 = time.time()
 
             with torch.inference_mode():
-                generation = model.generate(**inputs, max_new_tokens=200, do_sample=True, streamer=streamer, temperature=0.3)
+                generation = model.generate(**inputs, max_new_tokens=500, min_new_tokens=30, do_sample=True, streamer=streamer, temperature=0.3)
                 new_tokens = generation[0][input_len:]
                 decoded_response = processor.decode(new_tokens, skip_special_tokens=True)
                 decoded_response = decoded_response.replace("<end_of_turn>", "").strip()
@@ -107,8 +108,7 @@ if __name__ == "__main__":
             messages.append({"role": "model", "content": [{"type": "text", "text": decoded_response}]})
 
             if count==0:
-                messages.append({"role": "user", "content": [{"type": "text", "text": f"Please, tell me in the cutest "
-                                                                                      f"way tht the system is loading, something like 'stand by' or 'wait a minute please' "}]})
+                messages.append({"role": "user", "content": [{"type": "text", "text": f"Say hello in the cutest way"}]})
                 count = 1
             else:
                 user_input = input("\nUser: ")
